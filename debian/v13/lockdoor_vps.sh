@@ -1,4 +1,3 @@
-cat << 'EOF' > safe_lockdown.sh
 #!/bin/bash
 export DEBIAN_FRONTEND=noninteractive
 
@@ -70,4 +69,3 @@ echo ""
 echo "=================================================="
 echo " SUCCESS: System hardened! Tailscale is live.     "
 echo "=================================================="
-EOF
