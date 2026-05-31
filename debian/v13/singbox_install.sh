@@ -29,7 +29,8 @@ sudo ss -tlnp | grep sing-box
 
 sudo ufw allow 443/tcp comment 'Singbox inbound'
 
-# sudo ufw allow 41641/udp comment 'Tailscale Direct P2P Coordination'
-# Rule B: Grant total trust to the internal Tailscale virtual network card
-# This allows devices connected inside your secure mesh network to communicate freely.
-# sudo ufw allow in on tailscale0 comment 'Trust all internal Tailscale mesh traffic'
+# Tailscale connection port
+sudo ufw allow 41641/udp comment 'Tailscale Direct P2P Coordination'
+
+# Grant trust to the internal Tailscale virtual network card
+sudo ufw allow in on tailscale0 comment 'Trust all internal Tailscale mesh traffic'
