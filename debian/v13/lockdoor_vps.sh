@@ -1,6 +1,9 @@
 #!/bin/bash
 export DEBIAN_FRONTEND=noninteractive
 
+# Define your custom SSH port (20K range)
+SSH_PORT=22022
+
 echo "=================================================="
 echo "          DEBIAN 13 LOCKDOWN INITIALIZED          "
 echo "=================================================="
@@ -15,57 +18,48 @@ if [[ -z "$PUBLIC_KEY" || ! "$PUBLIC_KEY" =~ ^ssh- ]]; then
     exit 1
 fi
 
-# 2. Prompt for Tailscale Key
-echo ""
-echo "👉 Step 2: Paste your Tailscale key OR the entire 'Generate Install Script' line:"
-read -r INPUT_KEY < /dev/tty
-
-# Smart filter: Strip away the curl command if they pasted the whole line
-TS_KEY="${INPUT_KEY##*--auth-key=}"
-# Strip away any accidental trailing spaces
-TS_KEY="${TS_KEY%% *}"
-
-if [[ -z "$TS_KEY" || ! "$TS_KEY" =~ ^tskey- ]]; then
-    echo "❌ Error: Could not find a valid Tailscale key (should start with tskey-). Exiting."
-    exit 1
-fi
-
 echo ""
 echo "⏳ Key accepted! Processing system updates and installations..."
 apt-get update && apt-get upgrade -y > /dev/null
 apt-get install -y curl ufw > /dev/null
 
-# 3. Inject the Public SSH Key
+# 2. Inject the Public SSH Key
 mkdir -p /root/.ssh
 echo "$PUBLIC_KEY" > /root/.ssh/authorized_keys
 chmod 700 /root/.ssh
 chmod 600 /root/.ssh/authorized_keys
 
-# 4. Hardening SSH for Debian 13
+# 3. Hardening SSH & Changing Port
 mkdir -p /etc/ssh/sshd_config.d/
-cat << 'OUTER' > /etc/ssh/sshd_config.d/99-hardened.conf
+cat << OUTER > /etc/ssh/sshd_config.d/99-hardened.conf
+Port $SSH_PORT
 PasswordAuthentication no
 PermitRootLogin prohibit-password
 OUTER
+
+# Restart SSH to apply changes
 systemctl restart ssh
 
-# 5. Install and Authenticate Tailscale
-echo "⏳ Connecting to your Tailnet..."
-curl -fsSL https://tailscale.com/install.sh | sh > /dev/null
-tailscale up --authkey="$TS_KEY" --accept-dns=false
-
-# 6. Setup Hybrid Firewall
+# 4. Setup UFW Firewall
 ufw default deny incoming
 ufw default allow outgoing
 ufw allow in on lo
-ufw allow in on tailscale0
-ufw allow 443/tcp
-ufw allow 22/tcp  # Kept open temporarily for verification
+ufw allow $SSH_PORT/tcp comment 'Custom SSH Port'
 
-# 7. Enable Firewall
+# Enable Firewall
 echo "y" | ufw enable
+
+# 5. Fetch Public IP for the connection string
+SERVER_IP=$(curl -s https://ifconfig.me || curl -s https://api.ipify.org)
 
 echo ""
 echo "=================================================="
-echo " SUCCESS: System hardened! Tailscale is live.     "
+echo " SUCCESS: System hardened and SSH port moved!     "
+echo "=================================================="
+echo ""
+echo "🔒 Password login is DISABLED."
+echo "🔒 Root login is ONLY allowed via your SSH key."
+echo ""
+echo "👉 Use this command to connect to your server:"
+echo "   ssh -p $SSH_PORT root@${SERVER_IP:-<SERVER_IP>}"
 echo "=================================================="
