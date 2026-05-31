@@ -2,10 +2,10 @@
 export DEBIAN_FRONTEND=noninteractive
 
 # Define your custom SSH port (20K range)
-SSH_PORT=22047
+SSH_PORT=22022
 
 echo "=================================================="
-echo "      LOCK DOWN HOST NO ROOT SSH                  "
+echo "      OPTIMIZED DEBIAN 13 HARDENING SCRIPT        "
 echo "=================================================="
 echo ""
 
@@ -92,14 +92,14 @@ echo "🔒 SSH Network Access: Key-Only (No passwords allowed)"
 echo "🔒 Local Escalation: 'sudo' commands require the password you just set."
 echo ""
 echo "👉 Connect via IPv4 (Recommended if local network is v4-only):"
-if [ -not -z "$IPV4_ADDR" ]; then
+if [[ -n "$IPV4_ADDR" ]]; then
     echo "   ssh -p $SSH_PORT ${NEW_USER}@${IPV4_ADDR}"
 else
     echo "   (No public IPv4 detected or curl timed out)"
 fi
 echo ""
 echo "👉 Connect via IPv6:"
-if [ -not -z "$IPV6_ADDR" ]; then
+if [[ -n "$IPV6_ADDR" ]]; then
     echo "   ssh -p $SSH_PORT ${NEW_USER}@[${IPV6_ADDR}]"
 else
     echo "   (No public IPv6 detected)"
