@@ -24,3 +24,12 @@ sudo systemctl status sing-box --no-pager
 
 # Check port 443 binding. Should see port 443 bound to the singboox process. 
 sudo ss -tlnp | grep sing-box
+
+# UFW hole punching for mesh VPN and singbox
+
+sudo ufw allow 443/tcp comment 'Singbox inbound'
+
+# sudo ufw allow 41641/udp comment 'Tailscale Direct P2P Coordination'
+# Rule B: Grant total trust to the internal Tailscale virtual network card
+# This allows devices connected inside your secure mesh network to communicate freely.
+# sudo ufw allow in on tailscale0 comment 'Trust all internal Tailscale mesh traffic'
